@@ -351,6 +351,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // --- Skip-permissions indicator ---
   const [skipPermissionsActive, setSkipPermissionsActive] = useState(false);
+  const [assistantPromoDismissed, setAssistantPromoDismissed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -360,6 +361,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         if (res.ok && !cancelled) {
           const data = await res.json();
           setSkipPermissionsActive(data.settings?.dangerously_skip_permissions === "true");
+          if (data.settings?.assistant_promo_dismissed === '1') {
+            setAssistantPromoDismissed(true);
+          }
         }
       } catch { /* ignore */ }
     };
@@ -437,6 +441,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 width={chatListWidth}
                 hasUpdate={updateContextValue.updateInfo?.updateAvailable ?? false}
                 readyToInstall={updateContextValue.updateInfo?.readyToInstall ?? false}
+                assistantPromoDismissedFromDB={assistantPromoDismissed}
               />
             </ErrorBoundary>
             {chatListOpen && (

@@ -50,11 +50,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Anti-FOUC: set data-theme-family from localStorage → DB fallback, validate against known IDs */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var v=${JSON.stringify(validIds)};var db=${JSON.stringify(dbThemeFamily || null)};var f=localStorage.getItem('codepilot_theme_family')||db||'default';if(v.indexOf(f)<0)f='default';document.documentElement.setAttribute('data-theme-family',f);if(!localStorage.getItem('codepilot_theme_family')&&f!=='default'){localStorage.setItem('codepilot_theme_family',f)}}catch(e){}})();` }} />
-        {/* Sync DB theme mode to next-themes localStorage if not yet set */}
+        {/* Anti-FOUC: set data-theme-family — DB is authoritative on startup, localStorage as fallback */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var v=${JSON.stringify(validIds)};var db=${JSON.stringify(dbThemeFamily || null)};var f=db||localStorage.getItem('codepilot_theme_family')||'default';if(v.indexOf(f)<0)f='default';document.documentElement.setAttribute('data-theme-family',f);try{localStorage.setItem('codepilot_theme_family',f)}catch(e){}}catch(e){}})();` }} />
+        {/* Sync DB theme mode to next-themes localStorage — DB is authoritative on startup */}
         {dbThemeMode && (
-          <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(!localStorage.getItem('theme')){localStorage.setItem('theme',${JSON.stringify(dbThemeMode)})}}catch(e){}})();` }} />
+          <script dangerouslySetInnerHTML={{ __html: `(function(){try{localStorage.setItem('theme',${JSON.stringify(dbThemeMode)})}catch(e){}})();` }} />
         )}
         <style id="theme-family-vars" dangerouslySetInnerHTML={{ __html: themeFamilyCSS }} />
       </head>

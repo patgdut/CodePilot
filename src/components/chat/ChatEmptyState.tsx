@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { FolderOpen, Brain, X } from '@/components/ui/icon';
@@ -139,16 +138,9 @@ interface AssistantPromoCardProps {
 
 export function AssistantPromoCard({ onSetup, onDismiss }: AssistantPromoCardProps) {
   const { t } = useTranslation();
-  const [dismissed, setDismissed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('codepilot:assistant-promo-dismissed') === '1';
-  });
-
-  if (dismissed) return null;
 
   const handleDismiss = () => {
     localStorage.setItem('codepilot:assistant-promo-dismissed', '1');
-    setDismissed(true);
     onDismiss();
   };
 

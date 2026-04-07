@@ -16,6 +16,7 @@ const ALLOWED_KEYS = [
   'theme_mode',
   'theme_family',
   'default_panel',
+  'assistant_promo_dismissed',
 ];
 
 export async function GET() {

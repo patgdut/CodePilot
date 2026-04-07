@@ -55,10 +55,12 @@ interface ChatListPanelProps {
   width?: number;
   hasUpdate?: boolean;
   readyToInstall?: boolean;
+  /** Promo card dismissed flag from DB, threaded down via AppShell to avoid a separate fetch */
+  assistantPromoDismissedFromDB?: boolean;
 }
 
 
-export function ChatListPanel({ open, width, hasUpdate, readyToInstall }: ChatListPanelProps) {
+export function ChatListPanel({ open, width, hasUpdate, readyToInstall, assistantPromoDismissedFromDB }: ChatListPanelProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { streamingSessionId, pendingApprovalSessionId, activeStreamingSessions, pendingApprovalSessionIds, workingDirectory } = usePanel();
@@ -87,7 +89,10 @@ export function ChatListPanel({ open, width, hasUpdate, readyToInstall }: ChatLi
     configured: boolean;
     buddy?: { emoji: string; buddyName?: string; species?: string };
   } | null>(null);
-  const [promoDismissed, setPromoDismissed] = useState(false);
+  const [promoDismissed, setPromoDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('codepilot:assistant-promo-dismissed') === '1';
+  });
 
   // Reload assistant summary when sessions change (e.g. after onboarding/rename)
   useEffect(() => {
@@ -96,6 +101,11 @@ export function ChatListPanel({ open, width, hasUpdate, readyToInstall }: ChatLi
       .then(data => setAssistantSummary(data))
       .catch(() => {});
   }, [sessions.length]);
+
+  // Apply DB-sourced promo dismissed flag once AppShell's settings fetch resolves
+  useEffect(() => {
+    if (assistantPromoDismissedFromDB) setPromoDismissed(true);
+  }, [assistantPromoDismissedFromDB]);
 
   /** Read current model + provider_id from localStorage for new session creation */
   const getCurrentModelAndProvider = useCallback(() => {
@@ -552,7 +562,14 @@ export function ChatListPanel({ open, width, hasUpdate, readyToInstall }: ChatLi
           {assistantSummary && !assistantSummary.configured && !promoDismissed && (
             <AssistantPromoCard
               onSetup={() => router.push('/settings#assistant')}
-              onDismiss={() => setPromoDismissed(true)}
+              onDismiss={() => {
+                setPromoDismissed(true);
+                fetch('/api/settings/app', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ settings: { assistant_promo_dismissed: '1' } }),
+                }).catch(() => {});
+              }}
             />
           )}
 
